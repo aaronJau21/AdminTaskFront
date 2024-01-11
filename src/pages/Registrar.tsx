@@ -1,14 +1,89 @@
+import { FormEvent, useState } from "react";
 import { Link } from "react-router-dom";
+import Alerta from "../components/Alerta";
+import axios from "axios";
 
 const Registrar = () => {
+  const [nombre, setNombre] = useState("");
+  const [email, setEmail] = useState("");
+  const [password, setPassword] = useState("");
+  const [repeat_password, setRepeat_password] = useState("");
+  const [alert, setAlert] = useState({
+    msg: "",
+    error: false,
+  });
+
+  const handleSubmit = async (e: FormEvent) => {
+    e.preventDefault();
+
+    if ([nombre, email, password, repeat_password].includes("")) {
+      setAlert({
+        msg: "All fields are requerid",
+        error: true,
+      });
+
+      return;
+    }
+    if (password !== repeat_password) {
+      setAlert({
+        msg: "passwords are not the same",
+        error: true,
+      });
+
+      return;
+    }
+
+    if (password.length <= 6) {
+      setAlert({
+        msg: "The password is very short, minimun 6 characteres",
+        error: true,
+      });
+
+      return;
+    }
+
+    setAlert({
+      msg: "",
+      error: false,
+    });
+
+    try {
+      const { data } = await axios.post(
+        `${import.meta.env.VITE_API}/api/v1/auth/create`,
+        { nombre, email, password }
+      );
+      setAlert({
+        msg: data.msg,
+        error: false,
+      });
+
+      setNombre("");
+      setEmail("");
+      setPassword("");
+      setRepeat_password("");
+
+      // eslint-disable-next-line @typescript-eslint/no-explicit-any
+    } catch (error: any) {
+      setAlert({
+        msg: error.response.data.msg,
+        error: true,
+      });
+    }
+  };
+
+  const { msg } = alert as { msg: string };
+
   return (
     <>
       <h1 className="text-sky-600 text-6xl font-black capitalize">
         Create your acount and manage your {""}
         <span className="text-slate-700">projects</span>
       </h1>
-
-      <form className="my-10 bg-white shadow rounded-lg px-10 py-5">
+      {msg && <Alerta alerta={alert} />}
+      <form
+        className="my-10 bg-white shadow rounded-lg px-10 py-5"
+        onSubmit={handleSubmit}
+      >
         <div className="my-5">
           <label
             htmlFor="name"
@@ -21,6 +96,8 @@ const Registrar = () => {
             placeholder="Name"
             id="name"
             className="w-full mt-3 p-3 border rounded-xl bg-gray-200"
+            value={nombre}
+            onChange={(e) => setNombre(e.target.value)}
           />
         </div>
 
@@ -36,6 +113,8 @@ const Registrar = () => {
             placeholder="Email"
             id="email"
             className="w-full mt-3 p-3 border rounded-xl bg-gray-200"
+            value={email}
+            onChange={(e) => setEmail(e.target.value)}
           />
         </div>
 
@@ -51,6 +130,8 @@ const Registrar = () => {
             placeholder="Password"
             id="password"
             className="w-full mt-3 p-3 border rounded-xl bg-gray-200"
+            value={password}
+            onChange={(e) => setPassword(e.target.value)}
           />
         </div>
 
@@ -66,6 +147,8 @@ const Registrar = () => {
             placeholder="Repeat Password"
             id="repeat_password"
             className="w-full mt-3 p-3 border rounded-xl bg-gray-200"
+            value={repeat_password}
+            onChange={(e) => setRepeat_password(e.target.value)}
           />
         </div>
 
